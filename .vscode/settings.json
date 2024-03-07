@@ -17,6 +17,7 @@
 		"PIOENV",
 		"PORTB",
 		"PORTD",
+		"SPLC",
 		"XTAL"
 	]
 }

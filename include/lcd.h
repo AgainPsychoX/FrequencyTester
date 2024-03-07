@@ -17,6 +17,9 @@ void lcd_print_np(PGM_P cstr, size_t length);
 /// Sets address/cursor position to given offset.
 void lcd_set_cursor(uint8_t offset);
 
+/// Clears the LCD
+void lcd_clear();
+
 /// Resets address/cursor position & shift to original position (address 0)
 void lcd_go_home();
 

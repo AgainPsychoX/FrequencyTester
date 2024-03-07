@@ -4,6 +4,10 @@
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 
+// Simple driver for SPLC780D based display, one line 8 characters.
+// Delays assume F_osc = 270KHz (1.52ms for clear, 40us for other).
+// Datasheet used: https://www.elektronika.ftn.uns.ac.rs/racunarska-elektronika/wp-content/uploads/sites/21/2018/03/SPLC780D.pdf
+
 // PORTB is being used for all the pins related to the LCD:
 // 4-bit mode is used: PB3..0 = D7..4
 #define RS_PIN	PB4
@@ -79,11 +83,18 @@ void lcd_set_cursor(uint8_t offset)
 	lcd_command_4(0b10000000 | offset);
 }
 
+/// Clears the LCD
+void lcd_clear()
+{
+	lcd_command_4(0b00000001);
+	_delay_us(1520 - 40);
+}
+
 /// Resets address/cursor position & shift to original position (address 0)
 void lcd_go_home()
 {
-	lcd_command_4(0b00000001);
-	_delay_us(2000);
+	lcd_command_4(0b00000010);
+	_delay_us(1520 - 40);
 }
 
 /// Initializes the LCD
@@ -100,7 +111,7 @@ void lcd_init()
 	PORTB = 0b000011;
 	lcd_pulse_enable();
 	// _delay_us(4100);
-			_delay_us(4500);
+			_delay_us(4500);	
 	PORTB = 0b000011;
 	lcd_pulse_enable();
 	// _delay_us(100);
@@ -118,22 +129,15 @@ void lcd_init()
 	// Function: 4 bit mode, single line, 5x8 font
 	lcd_command_4(0b00100000);
 
-	// // Display off
-	// lcd_command_4(0b00001000);
-
-	// Display on, no blink, no cursor
-	lcd_command_4(0b00001100);
+	// Display off (required by datasheet, but works without)
+	//lcd_command_4(0b00001000);
 
 	// Display clear
-	lcd_command_4(0b00000001);
-	_delay_us(1600);
+	lcd_clear();
 
 	// Entry mode: increment address, no shift
 	lcd_command_4(0b00000110);
 
-	// // Display on, no blink, no cursor
-	// lcd_command_4(0b00001100);
-
-	// Reset position to 0
-	lcd_command_4(0b10000000);
+	// Display on, no blink, no cursor
+	lcd_command_4(0b00001100);
 }
