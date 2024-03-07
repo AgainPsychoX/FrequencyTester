@@ -8,8 +8,13 @@
 		"pgmspace.h": "c"
 	},
 	"cSpell.words": [
+		"adump",
 		"DDRB",
 		"DDRD",
+		"disasm",
+		"OBJCOPY",
+		"objdump",
+		"PIOENV",
 		"PORTB",
 		"PORTD",
 		"XTAL"
