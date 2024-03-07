@@ -3,10 +3,15 @@
 		"*.log": "vt100",
 		"*.mod": "plaintext",
 		"io.h": "c",
-		"delay.h": "c"
+		"delay.h": "c",
+		"delay_basic.h": "c",
+		"pgmspace.h": "c"
 	},
 	"cSpell.words": [
+		"DDRB",
 		"DDRD",
-		"PORTD"
+		"PORTB",
+		"PORTD",
+		"XTAL"
 	]
 }
