@@ -2,26 +2,29 @@
 #include <util/delay.h>
 #include "lcd.h"
 
+inline int is_button_pressed()
+{
+	return PIND & (1 << PD7);
+}
+
 int main(void)
 {
 	// Setup LED output pin, driven by HIGH
 	DDRD = 1 << PB6;
 
+	// Pull-up for button input
+	PORTD |= 1 << PD7;
+
 	lcd_init();
 	lcd_print_p(PSTR("hello"));
-	lcd_print("?!");
-	_delay_ms(3000);
 
 	while (1) {
-		_delay_ms(1000);
-		PORTD |= 1 << PB6;
-		lcd_go_home();
-		lcd_print_p(PSTR("HIGH!   "));
-
-		_delay_ms(1000);
-		PORTD &= ~(1 << PB6);
-		lcd_go_home();
-		lcd_print_p(PSTR("     low"));
+		if (is_button_pressed()) {
+			PORTD &= ~(1 << PB6);
+		}
+		else {
+			PORTD |= 1 << PB6;
+		}
 	}
 
 	return 0;
