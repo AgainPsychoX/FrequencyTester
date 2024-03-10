@@ -9,15 +9,25 @@
 	},
 	"cSpell.words": [
 		"adump",
+		"COMPA",
 		"DDRB",
 		"DDRD",
 		"disasm",
 		"OBJCOPY",
 		"objdump",
+		"OCIE",
 		"PIOENV",
 		"PORTB",
 		"PORTD",
+		"Prescale",
+		"Prescaler",
 		"SPLC",
+		"SREG",
+		"TCCR",
+		"TCNT",
+		"TIMSK",
+		"TOIE",
+		"vect",
 		"XTAL"
 	]
 }

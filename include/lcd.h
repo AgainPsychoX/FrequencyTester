@@ -2,6 +2,10 @@
 
 #include <avr/pgmspace.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// Prints C-style string to the LCD
 void lcd_print(const char* cstr);
 
@@ -25,3 +29,7 @@ void lcd_go_home();
 
 /// Initializes the LCD
 void lcd_init();
+
+#ifdef __cplusplus
+}  /* end of "extern C" block */
+#endif
