@@ -7,8 +7,8 @@
 
 enum class Mode : uint8_t
 {
-	FrequencyExtra,
 	FrequencyBase,
+	FrequencyExtra,
 	BatteryVoltage,
 };
 constexpr auto modesCount = 3;
@@ -19,7 +19,6 @@ union Flags
 	uint8_t raw;
 	struct 
 	{
-		bool cycleReady : 1;	// Set if measuring cycle is finished, meaning there is new value to read.
 		bool reading : 1;	// Set if when inside display routing, to prevent issues when updating total count.
 		bool overflow : 1;	// Set if overflow occurred when counting
 	};
@@ -53,7 +52,6 @@ ISR(TIMER1_COMPA_vect)
 		*(reinterpret_cast<volatile uint8_t*>(&fullCount) + 1) = countExtra1;
 		*(reinterpret_cast<volatile uint8_t*>(&fullCount) + 2) = countExtra2;
 		*(reinterpret_cast<volatile uint8_t*>(&fullCount) + 3) = countExtra3;
-		// flags.cycleReady = true;
 	}
 
 	// Clear raw counter values for next cycle
@@ -70,6 +68,15 @@ inline void enableExternalPrescaler()
 inline void disableExternalPrescaler()
 {
 	PORTD |= (1 << PD5);
+}
+
+inline void enableLED()
+{
+	PORTD |= (1 << PD6);
+}
+inline void disableLED()
+{
+	PORTD &= ~(1 << PD6);
 }
 
 void setupFrequencyMeasurement()
@@ -110,20 +117,23 @@ void setMode(Mode next)
 			lcd_print_p(PSTR("Freq /16"));
 			_delay_ms(1000);
 			enableExternalPrescaler();
+			enableLED();
 			setupFrequencyMeasurement();
 			break;
 		case Mode::FrequencyBase:
 			lcd_print_p(PSTR("Freq  /1"));
 			_delay_ms(1000);
 			disableExternalPrescaler();
+			disableLED();
 			setupFrequencyMeasurement();
 			break;
 		case Mode::BatteryVoltage:
-			batteryAnalogValue = 717;
-			// TODO: ADC measurement, interrupt etc.
+			disableLED();
+			TIMSK = 0; // disable all timer/counter interrupts
+			ADMUX = (0 << REFS1) | (1 << REFS0); // AVcc ref., selected ADC0
+			ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0); // enable the ADC with prescaler = 128
 			break;
 	}
-	// flags.cycleReady = false;
 }
 
 inline void setNextMode()
@@ -151,25 +161,20 @@ int main(void)
 
 	// Set initial mode
 	flags.raw = 0;
-	setMode(Mode::FrequencyExtra);
+	setMode(Mode::FrequencyBase);
 	sei();
 
 	while (1) {
 		if (isButtonPressed()) {
 			while (isButtonPressed()) {
-				// wait for release
-				// _delay_ms(200); PORTD ^= (1 << PD6); ////// BLINK FOR TESTING
+				// Waiting for release
 			}
 
 			setNextMode();
 		}
 
+		// Move LCD cursor to start as we usually aim to overwrite whole width
 		lcd_go_home();
-
-		// if (!flags.cycleReady) {
-		// 	// Waiting for measurement to complete
-		// 	continue;
-		// }
 
 		Mode mode = getMode();
 		if (mode == Mode::FrequencyBase || mode == Mode::FrequencyExtra) {
@@ -187,10 +192,20 @@ int main(void)
 			}
 		}
 		else if (mode == Mode::BatteryVoltage) {
-			flags.reading = 1;
-			auto value = batteryAnalogValue;
-			flags.reading = 0;
-			uint8_t v_x10 = value * 12 / 102;
+			// Start new conversion
+			ADCSRA |= (1 << ADSC);
+			while (ADCSRA & (1 << ADSC)) {
+				// Waiting for conversion to finish
+			}
+			uint16_t raw = ADC;
+
+			// Calculate the voltage (1 digit of precision)
+			//	Voltage divider used: From 12V to 5V using 33kOhm and 24kOhm,
+			//	accurate ratio would be: 11.8 / 102.4, so 59 / 512 is used.
+			// TODO: check hardware and recalibrate it again, something is off
+			uint8_t v_x10 = raw * 59 / 512;
+
+			// Display on the LCD
 			sprintf_P(lcd_buffer, PSTR("BAT %u.%uV"), v_x10 / 10, v_x10 % 10);
 			lcd_print(lcd_buffer);
 		}
@@ -200,3 +215,4 @@ int main(void)
 }
 
 // TODO: custom itoa instead sprintf
+// TODO: consider rewriting to assembly

@@ -8,6 +8,10 @@
 		"pgmspace.h": "c"
 	},
 	"cSpell.words": [
+		"ADCSRA",
+		"ADMUX",
+		"ADPS",
+		"ADSC",
 		"adump",
 		"COMPA",
 		"DDRB",
