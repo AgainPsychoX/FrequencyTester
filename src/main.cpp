@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "lcd.h"
 
+#define HUMAN_READABLE_FREQUENCY
+
 enum class Mode : uint8_t
 {
 	FrequencyBase,
@@ -183,11 +185,32 @@ int main(void)
 				lcd_print_p(PSTR("overflow"));
 			}
 			else {
+				// Read the count and calculate frequency
 				flags.reading = 1;
 				uint32_t frequency = fullCount;
 				flags.reading = 0;
 				frequency *= mode == Mode::FrequencyExtra ? 64 : 4;
+
+#ifdef HUMAN_READABLE_FREQUENCY
+				// Prepare to display as MHz, kHz or Hz depending on which is easier to read
+				if (frequency > 999'000) {
+					uint8_t i = frequency / 1'000'000;
+					uint16_t f = frequency / 100 % 10000;
+					sprintf_P(lcd_buffer, PSTR("%u.%04uMHz"), i, f);
+				}
+				else if (frequency > 99'000) {
+					uint8_t i = frequency / 1'000;
+					uint16_t f = frequency % 1'000;
+					sprintf_P(lcd_buffer, PSTR("%u.%03ukHz"), i, f);
+				}
+				else /* easily readable as accurate */ {
+					sprintf_P(lcd_buffer, PSTR("%6luHz"), frequency);
+				}
+#else
+				// Prepare to display, always as much accurate as possible (Hz)
 				sprintf_P(lcd_buffer, PSTR("%6luHz"), frequency);
+#endif
+
 				lcd_print(lcd_buffer);
 			}
 		}
